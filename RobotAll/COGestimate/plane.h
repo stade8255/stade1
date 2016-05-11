@@ -1,0 +1,51 @@
+#ifndef PLANE_H
+#define PLANE_H
+
+#include "ekfilter.hpp"
+
+
+class cPlaneEKF : public Kalman::EKFilter<double,1,false,true,false> {
+public:
+	cPlaneEKF();
+
+protected:
+	void makeBaseA();
+	void makeBaseH();
+	void makeBaseV();
+	void makeBaseR();
+	void makeBaseW();
+	void makeBaseQ();
+
+	void makeA();
+	void makeH();
+	void makeProcess();
+	void makeMeasure();
+
+	double Period, Mass, Bfriction, Portance, Gravity , samplingtime , ww , mass ,COG_height ;
+	
+};
+
+typedef cPlaneEKF::Vector Vector;
+typedef cPlaneEKF::Matrix Matrix;
+
+//Ва°К
+class rPlaneEKF : public Kalman::EKFilter<double,1,false,true,false> {
+public:
+	rPlaneEKF();
+
+protected:
+	void makeBaseA();
+	void makeBaseH();
+	void makeBaseV();
+	void makeBaseR();
+	void makeBaseW();
+	void makeBaseQ();
+
+	void makeA();
+	void makeH();
+	void makeProcess();
+	void makeMeasure();
+
+	double deltatheta, samplingtime , ww, COG_height ;
+};
+#endif
