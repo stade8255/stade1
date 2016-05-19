@@ -8,8 +8,13 @@ using namespace std;
 
 cPlaneEKF::cPlaneEKF() 
 {  	 
+	ZMPflag = 0;	// ¬O§_§âZMP¥[¤JekfºâCOG
 
-    setDim(3, 1, 3, 3, 3);  //³]©wmatrix dimention  n state = 4 (X = A X   X vector ªº¤j¤p)   m (measurement vector  ªº¤j¤p)
+	if ( ZMPflag == 0 )
+		setDim(3, 1, 3, 2, 2);  //³]©wmatrix dimention  n state = 4 (X = A X   X vector ªº¤j¤p)   m (measurement vector  ªº¤j¤p)
+	else
+		setDim(3, 1, 3, 3, 3);  //³]©wmatrix dimention  n state = 4 (X = A X   X vector ªº¤j¤p)   m (measurement vector  ªº¤j¤p)
+
 	/*³]©wmatrix dimention
 		setDim setDim  (  
 		K_UINT_32  n_,    # of state      
@@ -23,13 +28,13 @@ cPlaneEKF::cPlaneEKF()
     K_UINT_32 nw;       //!< Size of the process noise vector.
     K_UINT_32  m;       //!< Size of the measurement vector.
     K_UINT_32 nv;       //!< Size of the measurement noise vector.
+	*/
 
+	COG_height = 0.666 ; // COG Â÷¦a°ª«× (³æ¦ìmm)
+	samplingtime = 0.005;    //step time 5ms 
+	ww = sqrt( 9.8/ COG_height) ;
+	mass = 730; //¾÷¾¹¤H½è¶q ³æ¦ì kg  from adams z-force
 
-*/
-	   COG_height = 0.666 ; // COG Â÷¦a°ª«× (³æ¦ìmm)
-	   samplingtime = 0.005;    //step time 5ms 
-	   ww = sqrt( 9.8/ COG_height) ;
-	   mass = 730; //¾÷¾¹¤H½è¶q ³æ¦ì kg  from adams z-force
 	  
 
 }
@@ -38,20 +43,39 @@ cPlaneEKF::cPlaneEKF()
 
 void cPlaneEKF::makeBaseA()
 {
-    A(1,1) = 1.0;
-	A(1,2) = samplingtime;
-	A(1,3) = 0.0;
+	if ( ZMPflag == 0 )
+	{
+		// x = {COG, COGvelocity, COGacceleration}
+		A(1,1) = 1.0;
+		A(1,2) = samplingtime;
+		A(1,3) = 1/2*samplingtime*samplingtime;
 
-	A(2,1) = ww*ww*samplingtime;
-	A(2,2) = 1;
-	A(2,3) = -ww*ww*samplingtime;
+		A(2,1) = 0;
+		A(2,2) = 1;
+		A(2,3) = samplingtime;
 	
-	A(3,1) = 0.0;
-	A(3,2) = 0.0;
-	A(3,3) = 1.0;
-
-
+		A(3,1) = 0.0;
+		A(3,2) = 0.0;
+		A(3,3) = 1.0;
 	}
+	else
+	{
+		// x = {COG, COGvelocity, ZMP}
+		A(1,1) = 1.0;
+		A(1,2) = samplingtime;
+		A(1,3) = 1/2*samplingtime*samplingtime;
+
+		A(2,1) = ww*ww*samplingtime;
+		A(2,2) = 1;
+		A(2,3) = -ww*ww*samplingtime;
+	
+		A(3,1) = 0.0;
+		A(3,2) = 0.0;
+		A(3,3) = 1.0;
+	}
+
+
+}
 
 
 void cPlaneEKF::makeA()
@@ -89,11 +113,6 @@ void cPlaneEKF::makeBaseW()   //®Ú¾Úf °µpartial w ¬°process noise ¨C­Óstate ³£¦³
 	W(3,1) = 0.0;
 	W(3,2) = 0.0;
 	W(3,3) = 1.0;
-
-
-
-
-
 }
 
 
@@ -112,9 +131,6 @@ void cPlaneEKF::makeBaseQ()  //standard  process covariance matrix ¬° 4X4 ´y­z¦U
 	Q(3,1) = 0.001/50;
 	Q(3,2) = 0.001/50;
 	Q(3,3) = 0.001;
-
-
-
 }
 
 
@@ -123,18 +139,32 @@ void cPlaneEKF::makeBaseQ()  //standard  process covariance matrix ¬° 4X4 ´y­z¦U
 
 void cPlaneEKF::makeBaseH()  ///matrix C 
 {
-	H(1,1) = 1.0;
-	H(1,2) = 0.0;
-	H(1,3) = 0.0;
+	if ( ZMPflag == 0 )
+	{
+		// z = {COG, COGacceleration}
+		H(1,1) = 1.0;
+		H(1,2) = 0.0;
+		H(1,3) = 0.0;
 	
-	H(2,1) = 0.0;
-	H(2,2) = 0.0;
-	H(2,3) = 1.0;
+		H(2,1) = 0.0;
+		H(2,2) = 0.0;
+		H(2,3) = 1.0;
+	}
+	else
+	{
+		// z = {COG, ZMP, COGacceleration}
+		H(1,1) = 1.0;
+		H(1,2) = 0.0;
+		H(1,3) = 0.0;
 	
-	H(3,1) = ww*ww;
-	H(3,2) = 0.0;
-	H(3,3) = -ww*ww;
+		H(2,1) = 0.0;
+		H(2,2) = 0.0;
+		H(2,3) = 1.0;
 	
+		H(3,1) = ww*ww;
+		H(3,2) = 0.0;
+		H(3,3) = -ww*ww;
+	}
 
 
 }
@@ -164,19 +194,28 @@ void cPlaneEKF::makeH()
 
 void cPlaneEKF::makeBaseV()
 {
-	V(1,1) = 1.0;
-	V(1,2) = 0.0;
-	V(1,3) = 0.0;
+	if ( ZMPflag == 0 )
+	{
+		V(1,1) = 1.0;
+		V(1,2) = 0.0;
 	
+		V(2,1) = 0.0;
+		V(2,2) = 1.0;
+	}
+	else
+	{
+		V(1,1) = 1.0;
+		V(1,2) = 0.0;
+		V(1,3) = 0.0;
 	
-	V(2,1) = 0.0;
-	V(2,2) = 1.0;
-    V(2,3) = 0.0;
-	
+		V(2,1) = 0.0;
+		V(2,2) = 1.0;
+		V(2,3) = 0.0;
 
-	V(3,1) = 0.0;
-	V(3,2) = 0.0;
-    V(3,3) = 1.0;
+		V(3,1) = 0.0;
+		V(3,2) = 0.0;
+		V(3,3) = 1.0;
+	}
 	
 }
 
@@ -184,22 +223,28 @@ void cPlaneEKF::makeBaseR()  //measurement noise  (¨Ì¾Ú¨C­Ósensor·|¦³¤£¦P) ´ú¶q¤
 {
 	if (AdamsSMode)
 	{
-	//process noise = 0.001
-	//ADAMS MODE °Ñ¼Æ
-	R(1,1) = 0.01;  // ¥Ñjoint encoder ¦^ºâªºCOG ¦ì¸m
-	R(2,2) = 0.0001;  // ¥Ñ¤O³Wºâ¥Xªº ZMP
-	R(3,3) = 0.0001;  //IMU ¶q´úªº COG ¥[³t«× 
+		//process noise = 0.001
+		//ADAMS MODE °Ñ¼Æ
+		R(1,1) = 0.01;  // ¥Ñjoint encoder ¦^ºâªºCOG ¦ì¸m
+		R(2,2) = 0.0001;  // ¥Ñ¤O³Wºâ¥Xªº ZMP
+		R(3,3) = 0.0001;  //IMU ¶q´úªº COG ¥[³t«× 
 	}
-
 	else
 	{
-	////EXP MODE °Ñ¼Æ
-	R(1,1) = 0.0001;  // ¥Ñjoint encoder ¦^ºâªºCOG ¦ì¸m
-	R(2,2) = 0.001223;  // ¥Ñ¤O³Wºâ¥Xªº ZMP
-	R(3,3) = 0.00022;  //IMU ¶q´úªº COG ¥[³t«× 
+		////EXP MODE °Ñ¼Æ
+		if ( ZMPflag == 0 )
+		{
+			R(1,1) = 0.1;   // ¥Ñjoint encoder ¦^ºâªºCOG ¦ì¸m
+			R(2,2) = 0.000022;  //IMU ¶q´úªº COG ¥[³t«× 
+			// ¼Æ­È¥Î­õÞ±ªº¡A¥i­«´ú
+		}
+		else
+		{
+			R(1,1) = 0.0001;  // ¥Ñjoint encoder ¦^ºâªºCOG ¦ì¸m
+			R(2,2) = 0.001223;  // ¥Ñ¤O³Wºâ¥Xªº ZMP
+			R(3,3) = 0.00022;  //IMU ¶q´úªº COG ¥[³t«× 
+		}
 	}
-
-
 }
 
 
@@ -207,18 +252,40 @@ void cPlaneEKF::makeProcess() //  doing model  ´y­zstate¶¡ªºÃö«Y ¨Ì¾Úmatrix A
 {
 	Vector x_(x.size());
 	
-	x_(1) = x(1) +  samplingtime*x(2);
-	x_(2) = ww*ww*samplingtime*x(1)+x(2)-ww*ww*samplingtime*x(3)+(samplingtime/mass)* x(4);
-	x_(3) = x(3); 
+	if ( ZMPflag == 0 )
+	{
+		// x = {COG, COGvelocity, COGacceleration}
+		x_(1) = x(1) + samplingtime*x(2) + 1/2*samplingtime*samplingtime*x(3);
+		x_(2) = x(2) + samplingtime*x(3);
+		x_(3) = x(3);
+	}
+	else
+	{
+		// x = {COG, COGvelocity, ZMP}
+		x_(1) = x(1) +  samplingtime*x(2);
+		x_(2) = ww*ww*samplingtime*x(1)+x(2)-ww*ww*samplingtime*x(3)+(samplingtime/mass)* x(4);
+		x_(3) = x(3); 
+	}
+
 	x.swap(x_);
 }
 
 
 void cPlaneEKF::makeMeasure()    //´y­zmeasurement»Pstate¶¡ªºÃö«Y  ¨Ì¾Ú matrix C  x(4) ¬° (1/kg)*N   1/mass*x(4)*1000 ­n­¼1000 
 {
-	z(1)=x(1);
-	z(2)=x(3);
-	z(3)= ww*ww*x(1) - ww*ww*x(3) ;
+	if ( ZMPflag == 0 )
+	{
+		// z = {COG, COGacceleration}
+		z(1)=x(1);
+		z(2)=x(3);
+	}
+	else
+	{
+		// z = {COG, ZMP, COGacceleration}
+		z(1)=x(1);
+		z(2)=x(3);
+		z(3)= ww*ww*x(1) - ww*ww*x(3);
+	}
 	
 }
 
@@ -228,12 +295,12 @@ rPlaneEKF::rPlaneEKF()
 
     setDim(7, 0, 7, 7, 7);  //³]©wmatrix dimention  n state = 4 (X = A X   X vector ªº¤j¤p)   m (measurement vector  ªº¤j¤p)
 	/*³]©wmatrix dimention
-		setDim setDim  (  
-		K_UINT_32  n_,    # of state      
-		K_UINT_32  nu_,   # of input 
-		K_UINT_32  nw_,   # of standrd process 
-		K_UINT_32  m_,    # of measure  
-		K_UINT_32  nv_    # of measurement   noise 
+	setDim setDim  (  
+	K_UINT_32  n_,    # of state      
+	K_UINT_32  nu_,   # of input 
+	K_UINT_32  nw_,   # of standrd process 
+	K_UINT_32  m_,    # of measure  
+	K_UINT_32  nv_    # of measurement   noise 
 
     K_UINT_32 n;        //!< Size of the state vector.
     K_UINT_32 nu;       //!< Size of the input vector.
@@ -412,7 +479,7 @@ void rPlaneEKF::makeBaseW()   //®Ú¾Úf °µpartial w ¬°process noise ¨C­Óstate ³£¦³
 void rPlaneEKF::makeBaseQ()  //standard  process covariance matrix ¬° 4X4 ´y­z¦U­Óvariable¶¡ªºcovariance 
 {     
 	//¦Û¤v¸ò¦Û¤v 0.001   
-	Q(1,1) =0.001;         //±Nx(4) external force ½Õ¤j  Åý¨ä¬Û«Hmeasurement
+	Q(1,1) =0.001;         
 	Q(1,2) = 0.001/50;
 	Q(1,3) = 0.001/50;
 	Q(1,4) = 0.001/50;

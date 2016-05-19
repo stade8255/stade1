@@ -82,7 +82,7 @@ enum RobotCommunication{SetHome,SetOnePID,Manual,SetIdle,Reserved1,Traj,SetAllPI
 #define SaveLQSIStates 0 // 設定LQSISolver物件之下 DummyControl() 要不要寫入文字檔案部分 (倒單擺計算結果)
 
 //Simulation on Adams
-#define AdamsSMode 1 // =0: 請配合泓逸Matlab程式 =1: 請配合Slongz Matlab程式
+#define AdamsSMode 0 // =0: 請配合泓逸Matlab程式 =1: 請配合Slongz Matlab程式
 
 //Arm DH Settings 
 #define ArmDH 0 //		1:大金(1st Demo及腳組預設手臂初始方向設定)		0: 聖翔(手語軌跡手臂初始方向設定)

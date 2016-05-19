@@ -7,6 +7,7 @@
 class cPlaneEKF : public Kalman::EKFilter<double,1,false,true,false> {
 public:
 	cPlaneEKF();
+	bool ZMPflag;	// 是否把ZMP加入ekf算COG
 
 protected:
 	void makeBaseA();
@@ -22,6 +23,7 @@ protected:
 	void makeMeasure();
 
 	double Period, Mass, Bfriction, Portance, Gravity , samplingtime , ww , mass ,COG_height ;
+
 	
 };
 

@@ -101,7 +101,7 @@ TwinCAT_COM *TCAT;
 bool modified_flag = 0 ;  //檢查zmp modified 
 bool single_foot = 1;
 bool always_enable = 1;    //定義controller 常開常關
-bool angleEKF = 0;
+bool angleEKF = 1;
 
 
 
@@ -11932,7 +11932,9 @@ void gPrepareScenarioScript(int SecNo)
 				 //----------push recovery ----------//
 				 
 				 if (single_foot==1)
-				 {gInitSumoMotion();
+				 {
+					 gInitSumoMotion();
+					 //gInitWalkStraight(9,197);
 				
 				 cout<<endl;
 				 cout<<endl;
@@ -11943,9 +11945,7 @@ void gPrepareScenarioScript(int SecNo)
 				 cout<<endl;
 				 }
 				 else
-			     
-					 
-			     gInitWalkStraight(9,197);
+					gInitWalkStraight(9,197);
 
 
 				 //----------push recovery ----------//
@@ -16231,7 +16231,19 @@ void gsavedata(){
 		push_data.close();
 
 	
+		push_data.open("./A push_recovery/state3lateral.txt",ios::out);
+		for(int i = 0;i < Estimatebuffersize  ; i++)
+		{
+			push_data<<COGestimate.state3lateral[i]<<endl; 
+		}	
+		push_data.close();
 
+		push_data.open("./A push_recovery/state3sagittal.txt",ios::out);
+		for(int i = 0;i < Estimatebuffersize  ; i++)
+		{
+			push_data<<COGestimate.state3saggital[i]<<endl; 
+		}	
+		push_data.close();
 
 
 		
@@ -16851,21 +16863,22 @@ void dataprocess(int LogEncCount)
 	LFX[LogEncCount]=gKineAll.ForceDataKFL[gForceDataCount*6]*1e-6 ;  // * 10^-6
 	}												
 		
-		sensorfilter( LFX+ LogEncCount,  filterLFX+ LogEncCount);	
+	sensorfilter( LFX+ LogEncCount,  filterLFX+ LogEncCount);	
 
-		//是否開啟角度的EKF
-		if (angleEKF == 0)
-		{
-			sensorfilter( LogIMUaccelx+LogEncCount,  filter_LogIMUaccelx+LogEncCount);
-			sensorfilter( LogIMUaccely+LogEncCount,  filter_LogIMUaccely+LogEncCount);
-		}
-		else
-		{
-			COGestimate.rcompute(LogIMUabsanglex[LogEncCount], LogIMUabsangley[LogEncCount], 0, 
-								 LogIMUvelx[LogEncCount], LogIMUvely[LogEncCount], LogIMUvelz[LogEncCount],
-								 LogIMUaccelx[LogEncCount], LogIMUaccely[LogEncCount], LogIMUaccelz[LogEncCount], 
-								 filter_LogIMUaccelx[LogEncCount], filter_LogIMUaccely[LogEncCount], filter_LogIMUaccelz[LogEncCount], LogEncCount);
-		}
+	//是否開啟角度的EKF
+	if (angleEKF == 0)
+	{
+		sensorfilter( LogIMUaccelx+LogEncCount,  filter_LogIMUaccelx+LogEncCount);
+		sensorfilter( LogIMUaccely+LogEncCount,  filter_LogIMUaccely+LogEncCount);
+	}
+	else
+	{
+		COGestimate.rcompute(LogIMUabsanglex[LogEncCount], LogIMUabsangley[LogEncCount], 0, 
+								LogIMUvelx[LogEncCount], LogIMUvely[LogEncCount], LogIMUvelz[LogEncCount],
+								LogIMUaccelx[LogEncCount], LogIMUaccely[LogEncCount], LogIMUaccelz[LogEncCount], 
+								filter_LogIMUaccelx[LogEncCount], filter_LogIMUaccely[LogEncCount], filter_LogIMUaccelz[LogEncCount], LogEncCount);
+	}
+
 	COGestimate.compute(gEnc_FKCOG[LogEncCount*3]  , ZMP_sagittal+LogEncCount  , filter_LogIMUaccely[LogEncCount], LogEncCount,2);
 	COGestimate.compute(gEnc_FKCOG[LogEncCount*3+1]  , ZMP_lateral+LogEncCount  , filter_LogIMUaccelx[LogEncCount], LogEncCount,1);
 
@@ -16953,7 +16966,7 @@ else
 
 	//Lateral direction 
 	sensorfilter_vector(COGestimate.Cogstatelateral+LogEncCount,filterCOG_lateral+LogEncCount,LogEncCount);
-	sensorfilter_vector(COGestimate.zmpstatelateral+LogEncCount,filterZMP_lateral+LogEncCount,LogEncCount);
+	sensorfilter_vector(COGestimate.state3lateral+LogEncCount,filterZMP_lateral+LogEncCount,LogEncCount);
 	
 	//存下當下的SENSOR值 給 PUSHRECOVERY CONTROLLER 0415
 	COGsaggital =  filterCOG_sagittal[LogEncCount] ;

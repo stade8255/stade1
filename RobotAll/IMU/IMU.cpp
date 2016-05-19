@@ -203,9 +203,9 @@ void IMU :: ReadContinuousData(int portNum)
 			//move to the acceleration position and print the data		 
 			IMU_Lock=true;
 
-			accelx[count] =   Record.setA[1]*9.780318 ;//   單位m/s^2
-			accely[count] =   Record.setA[0]*9.780318 ;
-			accelz[count] =   Record.setA[2]*9.780318 ;	
+			accelx[count] =   Record.setA[1]*9.780318*1000 ;//   單位mm/s^2
+			accely[count] =   Record.setA[0]*9.780318*1000 ;
+			accelz[count] =   Record.setA[2]*9.780318*1000 ;	
 
 			velx[count] =  Record.setB[0];//     單位rad/s
 			vely[count] =  Record.setB[1] ;

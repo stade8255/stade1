@@ -6,18 +6,18 @@
 rPlaneEKF rfilter;
 cPlaneEKF filter;
 extern int gFlagSimulation; 
-    estimate ::estimate()
-	{   		
+estimate ::estimate()
+{   		
 	
 	for(int i = 0; i<10000 ; i++)
 	{
 		Cogstatelateral[i]=0;
 		Dcogstatelateral[i]=0;
-		zmpstatelateral[i]=0;
+		state3lateral[i]=0;
 
 		Cogstatesaggital[i]=0;
 		Dcogstatesaggital[i]=0;
-		zmpstatesaggital[i]=0;
+		state3saggital[i]=0;
 
 		AngleX[i]=0;
 		AngleY[i]=0;
@@ -28,7 +28,8 @@ extern int gFlagSimulation;
 	}
 
 
-    } ;
+};
+
 int estimate::rcompute ( float anglex ,float  angley , float anglez, float angularratex, float angularratey, float angularratez, float cogaccelx, float cogaccely, float cogaccelz, float &filtercogaccelx, float &filtercogaccely, float &filtercogaccelz, int estimatecount) 
 {
 	
@@ -47,9 +48,7 @@ int estimate::rcompute ( float anglex ,float  angley , float anglez, float angul
 
 	
 	Vector x(n);   // 開state vector 
-	
 	Vector rstate(n) ;
-	
 	Vector z(m);
 
 	EulerAngle ea;		// 暫存運算用之EulerAngle
@@ -59,10 +58,6 @@ int estimate::rcompute ( float anglex ,float  angley , float anglez, float angul
 	ea.fYaw = anglez;
 
 	QuaternionTrans1.FromEulerAngle(ea);	// 將EulerAngle轉為Quaternion並儲存
-	
-	//P0(0,0) = 0 ;
-	
-
 
 	//初始化
 	if (rinitflag == false )
@@ -85,9 +80,7 @@ int estimate::rcompute ( float anglex ,float  angley , float anglez, float angul
 	                                   };       //initial error 
 
 		Matrix P0(n, n, _P0); //建立 initial error  matrix  
-
 		rfilter.init(x, P0);
-
 
 		rinitflag = true;
 	}
@@ -157,14 +150,25 @@ int estimate::compute ( double cog ,double  *zmp ,double  cogaccel,int estimatec
 	
 	//direction = 1 ,lateral  direction 
 	//direction = 2 ,saggital direction  
-
+	
 	
 
 	const unsigned NTRY = 1200*10; //data數
 	
-	
-	const unsigned n = 3;	//nb states
-	const unsigned m = 3;	//nb measures
+
+	int n;	//nb states
+	int m;	//nb measures
+
+	if ( filter.ZMPflag == 0 )
+	{
+		n = 3;
+		m = 2;
+	}
+	else
+	{
+		n = 3;
+		m = 3;
+	}
 
 	double  timestep  = 0.005 ; 
 	
@@ -190,83 +194,98 @@ int estimate::compute ( double cog ,double  *zmp ,double  cogaccel,int estimatec
 
 
 
-	if(gFlagSimulation == 2)
+	if ( gFlagSimulation == 2 )
 	   exp_gain = 100; 
 	
-
-	if( estimatecount < 2) 
-	{
-		 Dzmp = 0 ; 
-		 Dzmpbefore  = 0 ; 
-	}
-	else
-	{	
-		Dzmp  =  ( *zmp - *(zmp-2) ) / timestep  ; 
-		Dzmpbefore = ( *(zmp-2) - *(zmp-4)  ) / timestep ; 
-	}
-
-	DDzmp = ( Dzmp - Dzmpbefore )/ timestep ; 
-
 		
 	
 	//P0(0,0) = 0 ;
 
-	//初始化
-	if (initflag == false )
+	// 初始化
+	if ( initflag == false )
 	{
-		x(1) = cog;
-		x(2) = *zmp;
-		x(3) = cogaccel* IMU_COG *exp_gain;
+		if ( filter.ZMPflag == 0 )
+		{
+			x(1) = cog;
+			x(2) = cogaccel* IMU_COG *exp_gain*timestep;
+			x(3) = cogaccel* IMU_COG *exp_gain;
+		}
+		else
+		{
+			x(1) = cog;
+			x(2) = *zmp;
+			x(3) = cogaccel* IMU_COG *exp_gain;
+		}
 
 		static const double _P0[] = { 0.1 ,0.0, 0.0,  
-								   	  0.0, 0.1 , 0.0 , 
+							   	      0.0, 0.1 , 0.0 , 
 									  0.0,  0.0,  0.1 
-	                                };       //initial error 
-
+									};       //initial error 
 		Matrix P0(n, n, _P0); //建立 initial error  matrix
 		filter.init(x, P0);
-		
+
 		initflag = true;
 	}
-	    
+
+	
+	// 丟入sensor的值
+	if ( filter.ZMPflag == 0 )
+	{
+		z(1) = cog;  
+		z(2) = cogaccel* IMU_COG *exp_gain; //將measurement 寫入 IMU安裝位置的比例分配
+	}
+	else
+	{
 		z(1) = cog;  
 		z(2) = *zmp;  
 		z(3) = cogaccel* IMU_COG *exp_gain;  //將measurement 寫入 IMU安裝位置的比例分配
+	}
+	    
+		
 	   
+	// u  control input    zmp二次微分
 		
-		// u  control input    zmp二次微分
+	if ( estimatecount < 2 ) 
+	{
+		 Dzmp = 0; 
+		 Dzmpbefore  = 0; 
+	}
+	else
+	{	
+		Dzmp  =  ( *zmp - *(zmp-2) ) / timestep; 
+		Dzmpbefore = ( *(zmp-2) - *(zmp-4)  ) / timestep; 
+	}
+
+	DDzmp = ( Dzmp - Dzmpbefore )/ timestep; 
+
+	Vector u(1);
+	//u(1) = DDzmp;
+	u(1) = 0;
 		
-		Vector u(1);
-		
-		u(1) = DDzmp ;
+	filter.step(u, z);
+
+	state  = filter.getX();
 
 		
-		filter.step(u, z);
-
-		state   = filter.getX()  ;
-
 		
-		
-		if (direction == 1 )
-		{
-			Cogstatelateral[estimatecount] =  state (1)  ;  //將state存入  cogstate matrix  
-			Dcogstatelateral[estimatecount] = state (2)  ;
-			zmpstatelateral[estimatecount] =  state (3)  ;
-		}
-		
-
-		else if (direction ==2)
-		{		
-			Cogstatesaggital[estimatecount]  =  state (1)  ;  //將state存入  cogstate matrix  
-			Dcogstatesaggital[estimatecount] =  state (2)  ;
-		    zmpstatesaggital[estimatecount]  =  state (3)  ;
+	if ( direction == 1 )
+	{
+		Cogstatelateral[estimatecount] =  state (1)  ;  //將state存入  cogstate matrix  
+		Dcogstatelateral[estimatecount] = state (2)  ;
+		state3lateral[estimatecount] =  state (3)  ;
+	}
+	else if ( direction == 2 )
+	{		
+		Cogstatesaggital[estimatecount]  =  state (1)  ;  //將state存入  cogstate matrix  
+		Dcogstatesaggital[estimatecount] =  state (2)  ;
+		state3saggital[estimatecount]  =  state (3)  ;
 				
-		}
+	}
 
 	estimate_lock = false;    // lock 避免掉值
 		 
 
-return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 
 	
 }
