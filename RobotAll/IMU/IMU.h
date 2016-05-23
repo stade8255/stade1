@@ -11,14 +11,13 @@
 #define IMUbuffersize 10000
 using namespace std;
 extern "C"       //include c library 特殊寫法
-
 {
-#include "i3dmgx3_Errors.h"
-#include "i3dmgx3_Cont.h"
-#include "i3dmgx3_Utils.h"
-#include "i3dmgx3_Utils_CM.h"
-#include "i3dmgx3_readWriteDR.h"
-#include "i3dmgx3_Serial.h"
+	#include "i3dmgx3_Errors.h"
+	#include "i3dmgx3_Cont.h"
+	#include "i3dmgx3_Utils.h"
+	#include "i3dmgx3_Utils_CM.h"
+	#include "i3dmgx3_readWriteDR.h"
+	#include "i3dmgx3_Serial.h"
 }
 
 #ifndef _IMU_H_
@@ -47,7 +46,7 @@ public:
 	float  ang1,ang2; 
 	float microstraincalix , microstraincaliy  ;  //cali值  與 microstrain MIP 比較
 	bool IMU_plot;
-	double vel_bound ;
+	double AngularVel_bound ;
 
 
 
@@ -79,9 +78,9 @@ public:
 	
 	float finalanglex_test[IMUbuffersize];
 
-	float velx [IMUbuffersize];	
-	float vely [IMUbuffersize];	
-	float velz [IMUbuffersize];	
+	float AngularVelx [IMUbuffersize];	
+	float AngularVely [IMUbuffersize];	
+	float AngularVelz [IMUbuffersize];	
 	
 	float accelx[IMUbuffersize];
 	float accely[IMUbuffersize];
@@ -109,9 +108,9 @@ public:
 
 
 	//------------------------variables---------------------------//
-	float  velbiasx , velbiasx1 , velbiasx2 ;
-	float  velbiasy , velbiasy1 , velbiasy2 ;
-	float  velbiasz , velbiasz1 , velbiasz2 ;// vel cali量
+	float  AngularVelbiasx , AngularVelbiasx1 , AngularVelbiasx2 ;
+	float  AngularVelbiasy , AngularVelbiasy1 , AngularVelbiasy2 ;
+	float  AngularVelbiasz , AngularVelbiasz1 , AngularVelbiasz2 ;// AngularVel cali量
 
 
 	float  anglebiasx ; 
@@ -136,11 +135,11 @@ public:
 
 
 //------------------------------------------------ 相關function-----------------------------------------------------------//
- void ReadContinuousData(int portNum); 
- void integation(float *velx ,float *anglex , float *vely ,float *angley ,float *velz ,float *anglez );
- void complementaryfilter(float* ang ,  float * abs , float * filterang , float *filterabs , float *filter , float bias  );
- void adamssim(int gFlagSimulation,int adamssimcount);
- bool IMU_Lock;
+	 void ReadContinuousData(int portNum); 
+	 void integation(float *AngularVelx ,float *anglex , float *AngularVely ,float *angley ,float *AngularVelz ,float *anglez );
+	 void complementaryfilter(float* ang ,  float * abs , float * filterang , float *filterabs , float *filter , float bias  );
+	 void adamssim(int gFlagSimulation,int adamssimcount);
+	 bool IMU_Lock;
  //------------------------------------------------ 相關function-----------------------------------------------------------//
 
 

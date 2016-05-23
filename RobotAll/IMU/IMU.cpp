@@ -10,7 +10,7 @@ IMU ::IMU (void){
 	
 	calicount  = 1000 ;   //cali的筆數
 	
-	vel_bound = 0 ;
+	AngularVel_bound = 0 ;
 	//adamssimcount = 0;
 
 	Ts =0.005;             //IMU sampling freqency 目前為 200 HZ
@@ -64,9 +64,9 @@ IMU ::IMU (void){
 	
 		finalanglex_test[i]=0;
 
-		velx[i]=0;	
-		vely[i]=0;	
-		velz[i]=0;	
+		AngularVelx[i]=0;	
+		AngularVely[i]=0;	
+		AngularVelz[i]=0;	
 	
 		accelx[i]=0;
 		accely[i]=0;
@@ -89,22 +89,22 @@ IMU ::IMU (void){
 	
 }
 	
-void  IMU :: integation(float *velx ,float *anglex , float *vely ,float *angley ,float *velz ,float *anglez ){
+void  IMU :: integation(float *AngularVelx ,float *anglex , float *AngularVely ,float *angley ,float *AngularVelz ,float *anglez ){
                    
 				   
-				   velbiasx1  = (*velx)   -velbiasx;  
-			       velbiasx2  = *(velx-1) -velbiasx;
+				   AngularVelbiasx1  = (*AngularVelx)   -AngularVelbiasx;  
+			       AngularVelbiasx2  = *(AngularVelx-1) -AngularVelbiasx;
 			   
-				   velbiasy1  = (*vely) -velbiasy;  
-			       velbiasy2  = *(vely-1) -velbiasy;
+				   AngularVelbiasy1  = (*AngularVely) -AngularVelbiasy;  
+			       AngularVelbiasy2  = *(AngularVely-1) -AngularVelbiasy;
 
-				   velbiasz1  = (*velz) -velbiasz;  
-			       velbiasz2  = *(velz-1) -velbiasz;   // vel  bias 
+				   AngularVelbiasz1  = (*AngularVelz) -AngularVelbiasz;  
+			       AngularVelbiasz2  = *(AngularVelz-1) -AngularVelbiasz;   // AngularVel  bias 
 
 				    
-		      *anglex=  *(anglex-1)  +  0.5*Ts* (  velbiasx1) +   0.5*Ts* (  velbiasx2 )    ; 
-              *angley=  *(angley-1)  +  0.5*Ts* (  velbiasy1) +   0.5*Ts* (  velbiasy2 )    ; 
-			  *anglez=  *(anglez-1)  +  0.5*Ts* (  velbiasz1) +   0.5*Ts* (  velbiasz2 )  ; 
+		      *anglex=  *(anglex-1)  +  0.5*Ts* (  AngularVelbiasx1) +   0.5*Ts* (  AngularVelbiasx2 )    ; 
+              *angley=  *(angley-1)  +  0.5*Ts* (  AngularVelbiasy1) +   0.5*Ts* (  AngularVelbiasy2 )    ; 
+			  *anglez=  *(anglez-1)  +  0.5*Ts* (  AngularVelbiasz1) +   0.5*Ts* (  AngularVelbiasz2 )  ; 
   }
 
 
@@ -180,12 +180,12 @@ void IMU :: ReadContinuousData(int portNum)
 	
 	if (IMU_plot==true)
 	{
-	printf("_________________________________  angle_________________________________\n");
-	printf("          ROLL                   PITCH                         COUNT         \n");
-	printf("\n");
+		printf("_________________________________  angle_________________________________\n");
+		printf("          ROLL                   PITCH                         COUNT         \n");
+		printf("\n");
 	
-	getConXY(&Curs_posX, &Curs_posY); 
-	printf("\n\n\n\n\n");
+		getConXY(&Curs_posX, &Curs_posY); 
+		printf("\n\n\n\n\n");
 	}
 	
 
@@ -193,10 +193,7 @@ void IMU :: ReadContinuousData(int portNum)
 	while(!bStopContinuous)
 	{
 		if(ReadNextRecord(portNum, &Record, &cmd_return) != SUCCESS)
-		{
 			error_record++;
-			cout<<"falseqq"<<error_record<<endl;
-		}
 
 		if (cmd_return == MODE)
 		{
@@ -207,9 +204,9 @@ void IMU :: ReadContinuousData(int portNum)
 			accely[count] =   Record.setA[0]*9.780318*1000 ;
 			accelz[count] =   Record.setA[2]*9.780318*1000 ;	
 
-			velx[count] =  Record.setB[0];//     單位rad/s
-			vely[count] =  Record.setB[1] ;
-			velz[count] =  Record.setB[2] ;	
+			AngularVelx[count] =  Record.setB[0];//     單位rad/s
+			AngularVely[count] =  Record.setB[1] ;
+			AngularVelz[count] =  Record.setB[2] ;	
 	             
 		/*	magx[count] = Record.setC[1];
 			magy[count] = Record.setC[0];
@@ -227,146 +224,103 @@ void IMU :: ReadContinuousData(int portNum)
 			M32[count] = Record.setF[1];
 			M33[count] = Record.setF[2];
 			
-			vel_bound = 0.3;
+			AngularVel_bound = 2.5;
 
 
 		    //絕對角度  由rotation matrix算出
 			//absanglex[count]   = - asin(   accelx[count] /0.99) -  abscalix;
 			//absangley[count]   =   asin(   accely[count] /0.99) -  abscaliy;  
 	  
-			absanglex[count] = atan2(M23[count], M33[count])  -  abscalix;
-			absangley[count] = asin(-M13[count]) -  abscaliy;
+			absanglex[count] = atan2(M23[count], M33[count]);
+			absangley[count] = asin(-M13[count]);
 			absanglez[count] = atan2(M12[count], M11[count]);
 				  
-				  //避免角度爆掉  設 absangle upper bound = 1.55  and velocity upper bound= 2.5 
+			//避免角度爆掉  設 absangle upper bound = 1.55  and velocity upper bound= 2.5 
 				  
-				  if(abs(absanglex[count])>=(PI/2))				 
-					  absanglex[count] = (accelx[count]/abs(accelx[count]))*(PI/2);
+			if(abs(absanglex[count])>=(PI/2))				 
+				absanglex[count] = (accelx[count]/abs(accelx[count]))*(PI/2);
 				 		  
-				  if(abs(absangley[count])>=(PI/2))
-				  
-					  absangley[count] = (accely[count]/abs(accely[count]))*(PI/2);
+			if(abs(absangley[count])>=(PI/2))  
+				absangley[count] = (accely[count]/abs(accely[count]))*(PI/2);
 			 						
-				  if(abs(velx[count])>vel_bound)
-					   velx[count] = (velx[count]/abs(velx[count]))*vel_bound;
+			if(abs(AngularVelx[count])>AngularVel_bound)
+				AngularVelx[count] = (AngularVelx[count]/abs(AngularVelx[count]))*AngularVel_bound;
 				  		  
-				  if(abs(vely[count])>vel_bound)
-					   vely[count] = (vely[count]/abs(vely[count]))*vel_bound;
+			if(abs(AngularVely[count])>AngularVel_bound)
+				AngularVely[count] = (AngularVely[count]/abs(AngularVely[count]))*AngularVel_bound;
 
-
-
-
-				  //相對角度的bias累積 在cali前
-				  anglebiasx    =  anglebiasx  +   anglex[count-1] ;
-				  anglebiasy    =  anglebiasy  +   angley[count-1] ;
-				  anglebiasz    =  anglebiasz  +   angley[count-1] ;
+			//相對角度的bias累積 在cali前
+			anglebiasx = anglebiasx + anglex[count-1];
+			anglebiasy = anglebiasy + angley[count-1];
+			anglebiasz = anglebiasz + anglez[count-1];
 
 				  
-				  //絕對角度的bias累積  在cali前
-				  absxbias =  absxbias  +  absanglex[count] ; 
-			      absybias =  absybias  +  absangley [count]; 
+			//絕對角度的bias累積  在cali前
+			absxbias = absxbias + absanglex[count]; 
+			absybias = absybias + absangley[count]; 
 
 
-
-
-
-   //當count = calicount時  將累積bias填入buffer內 						 
-   if (count ==0.5*calicount){    
-	                          
-	     
-		  if (absangle == 1){ //使用絕對角度 ==> 不cali
-
-	    abscalix = 0; 
-	    abscaliy = 0;
-		                    }
-	    
-		  else {  
-		abscalix =  absxbias /(0.5*calicount);   //使用相對角度 ==> cali
-	    abscaliy =  absybias /(0.5*calicount);
-
-		       }
-
-
-
-
-
+		    //當count = calicount時  將累積bias填入buffer內 						 
+		    if (count == 0.5*calicount)
+		    {    
+			    if (absangle == 1)
+			    { 
+				   //使用絕對角度 ==> 不cali
+					abscalix = 0; 
+					abscaliy = 0;
+		        }
+	    		else
+				{  
+					abscalix =  absxbias /(0.5*calicount);   //使用相對角度 ==> cali
+					abscaliy =  absybias /(0.5*calicount);
+		        }
 							  
-		for (int i = 0 ; i<(0.5*calicount);i++){  //將vel累積誤差bias消去
-		velbiasx  = velbiasx + velx[i] ;
-		velbiasy  = velbiasy + vely[i] ;
-		velbiasz  = velbiasz + velz[i] ;
-																				
+				for (int i = 0 ; i<(0.5*calicount);i++)
+				{  
+					//將AngularVel累積誤差bias消去
+					AngularVelbiasx  = AngularVelbiasx + AngularVelx[i] ;
+					AngularVelbiasy  = AngularVelbiasy + AngularVely[i] ;
+					AngularVelbiasz  = AngularVelbiasz + AngularVelz[i] ;
+				}		
+				AngularVelbiasx = AngularVelbiasx /(calicount*0.5);
+				AngularVelbiasy = AngularVelbiasy /(calicount*0.5);
+				AngularVelbiasz = AngularVelbiasz /(calicount*0.5);
+		    }	
+
+		    if ( count == calicount )//先讓AngularVel bias 消除   往後0.5cali count 再把角度bias 減掉
+		    {
+		  	    anglecalix  =  anglebiasx /(0.5*calicount);
+			    anglecaliy   = anglebiasy /(0.5*calicount);
+			    anglecaliz   = anglebiasz /(0.5*calicount); 
+		    }
+
+			if (count > 0.5*calicount)
+			{
+				integation (AngularVelx +count,anglex +count,AngularVely +count,angley +count,AngularVelz +count,anglez+count);
+			}	
+
+			//finalanglex (相對角度)   absanglex (絕對角度) 
+
+		    complementaryfilter(  anglex +count  ,  absanglex+count  ,filterx +count, filterabsx +count ,  anglefilterx+count , anglecalix);
+		    complementaryfilter(  angley +count  ,  absangley+count  ,filtery +count, filterabsy +count ,  anglefiltery+count , anglecaliy);        
+
+
+		    finalanglex[count] = anglefilterx[count] + microstraincalix ;  //加入 cali值  與 microstrain MIP 比較
+		    finalangley[count] = anglefiltery[count] + microstraincaliy ;
+
+			//print 角度 (度度制) cali完後就不顯示 比較不占資源
+		    if (IMU_plot==true)
+		    {
+		 	    sprintf(consoleBuff, "\t%f\t\t%f\t\t\t%d\n", finalanglex[count]*180/3.14,finalangley[count]*180/3.14 , count );
+			    setConXY(Curs_posX, Curs_posY ,  &consoleBuff[0]);
+		    }
+
+			valid_rec++;
+			count++; 
+   
+   		    IMU_Lock=false;
 		}
-							
-	    velbiasx = velbiasx /(calicount*0.5);
-	    velbiasy = velbiasy /(calicount*0.5);
-	    velbiasz = velbiasz /(calicount*0.5);
-        }	
-
-
-
- 
-
-   if (count == calicount )//先讓vel bias 消除   往後0.5cali count 再把角度bias 減掉
-
-   
-   
-   {
-   anglecalix  =  anglebiasx /(0.5*calicount);
-   anglecaliy   = anglebiasy /(0.5*calicount);
-   anglecaliz   = anglebiasz /(0.5*calicount); 
-   }
-
-
-
-
-   if (count > 0.5*calicount){
-
-	   integation (velx +count,anglex +count,vely +count,angley +count,velz +count,anglez+count);
-
-	   
-	   }	
-   
-   
-   ;					 
-
-
-
-   //finalanglex (相對角度)   absanglex (絕對角度) 
-
-
-   complementaryfilter(  anglex +count  ,  absanglex+count  ,filterx +count, filterabsx +count ,  anglefilterx+count , anglecalix);
-   complementaryfilter(  angley +count  ,  absangley+count  ,filtery +count, filterabsy +count ,  anglefiltery+count , anglecaliy);        
-
-
-   finalanglex[count]  = anglefilterx[count] + microstraincalix ;  //加入 cali值  與 microstrain MIP 比較
-
-   finalangley[count]  = anglefiltery[count] + microstraincaliy ;
-
-
-
-   //print 角度 (度度制) cali完後就不顯示 比較不占資源
-   
-
-   
-   if (IMU_plot==true)
-   {
-	   sprintf(consoleBuff, "\t%f\t\t%f\t\t\t%d\n", finalanglex[count]*180/3.14,finalangley[count]*180/3.14 , count );
-	   setConXY(Curs_posX, Curs_posY ,  &consoleBuff[0]);
-   }
-
-
-
-
-   valid_rec++;
-   count++; 
-   
-   		         IMU_Lock=false;
-
-			}
-
 	}
-
 }
 
 
@@ -425,23 +379,23 @@ void IMU ::adamssim(int gFlagSimulation,int adamssimcount){
 
 
 							  
-		for (int i = 0 ; i<(0.5*calicount);i++){  //將vel累積誤差bias消去
-		velbiasx  = velbiasx + velx[i] ;
-		velbiasy  = velbiasy + vely[i] ;
-		velbiasz  = velbiasz + velz[i] ;
+		for (int i = 0 ; i<(0.5*calicount);i++){  //將AngularVel累積誤差bias消去
+		AngularVelbiasx  = AngularVelbiasx + AngularVelx[i] ;
+		AngularVelbiasy  = AngularVelbiasy + AngularVely[i] ;
+		AngularVelbiasz  = AngularVelbiasz + AngularVelz[i] ;
 																				
 		}
 							
-	    velbiasx = velbiasx /(calicount*0.5);
-	    velbiasy = velbiasy /(calicount*0.5);
-	    velbiasz = velbiasz /(calicount*0.5);
+	    AngularVelbiasx = AngularVelbiasx /(calicount*0.5);
+	    AngularVelbiasy = AngularVelbiasy /(calicount*0.5);
+	    AngularVelbiasz = AngularVelbiasz /(calicount*0.5);
         }	
 
 
 
  
 
-   if (adamssimcount == calicount )//先讓vel bias 消除   往後0.5cali count 再把角度bias 減掉
+   if (adamssimcount == calicount )//先讓AngularVel bias 消除   往後0.5cali count 再把角度bias 減掉
 
    
    
@@ -456,7 +410,7 @@ void IMU ::adamssim(int gFlagSimulation,int adamssimcount){
 
    if (adamssimcount > 0.5*calicount){
 
-	   integation (velx +adamssimcount,anglex +adamssimcount,vely +adamssimcount,angley +adamssimcount,velz +adamssimcount,anglez+adamssimcount);
+	   integation (AngularVelx +adamssimcount,anglex +adamssimcount,AngularVely +adamssimcount,angley +adamssimcount,AngularVelz +adamssimcount,anglez+adamssimcount);
 
 	   
 	   } ;					 

@@ -858,9 +858,9 @@ void dataprocess(int LogEncCount );
 	float LogIMUangley[DataTotal];
 	float LogIMUanglez[DataTotal];
 	
-	float LogIMUvelx[DataTotal];
-	float LogIMUvely[DataTotal];
-	float LogIMUvelz[DataTotal];
+	float LogIMUAngularVelx[DataTotal];
+	float LogIMUAngularVely[DataTotal];
+	float LogIMUAngularVelz[DataTotal];
 	
 	float LogIMUaccelx[DataTotal];
 	float LogIMUaccely[DataTotal];
@@ -5012,9 +5012,9 @@ void gIMUdata(void){
 		LogIMUangley[LogEncCount]=IMU1.finalangley[IMU1.count-1];
 		LogIMUanglez[LogEncCount]=IMU1.finalanglez[IMU1.count-1];
 
-		LogIMUvelx[LogEncCount] =  IMU1.velx[IMU1.count-1] ;
-		LogIMUvely[LogEncCount] =  IMU1.vely[IMU1.count-1] ;
-		LogIMUvelz[LogEncCount] =  IMU1.velz[IMU1.count-1] ;
+		LogIMUAngularVelx[LogEncCount] =  IMU1.AngularVelx[IMU1.count-1] ;
+		LogIMUAngularVely[LogEncCount] =  IMU1.AngularVely[IMU1.count-1] ;
+		LogIMUAngularVelz[LogEncCount] =  IMU1.AngularVelz[IMU1.count-1] ;
 		
 		LogIMUaccelx[LogEncCount] = IMU1.accelx[IMU1.count-1];
 		LogIMUaccely[LogEncCount] = IMU1.accely[IMU1.count-1];	
@@ -5034,9 +5034,9 @@ void gIMUdata(void){
 		LogIMUangley[LogEncCount] =IMU1.finalangley[IMU1.count-2];
 		LogIMUanglez[LogEncCount] =IMU1.finalanglez[IMU1.count-2];
 		
-		LogIMUvelx[LogEncCount] =  IMU1.velx[IMU1.count-2] ;
-		LogIMUvely[LogEncCount] =  IMU1.vely[IMU1.count-2] ;
-		LogIMUvelz[LogEncCount] =  IMU1.velz[IMU1.count-2] ;
+		LogIMUAngularVelx[LogEncCount] =  IMU1.AngularVelx[IMU1.count-2] ;
+		LogIMUAngularVely[LogEncCount] =  IMU1.AngularVely[IMU1.count-2] ;
+		LogIMUAngularVelz[LogEncCount] =  IMU1.AngularVelz[IMU1.count-2] ;
 		
 		LogIMUaccelx[LogEncCount] = IMU1.accelx[IMU1.count-2];
 		LogIMUaccely[LogEncCount] = IMU1.accely[IMU1.count-2];
@@ -6973,16 +6973,23 @@ void CRobotAllDlg::OnBnClickedButton9() // PMS/BMS save
 		}	
 		force_data.close();
 
-		force_data.open("./Control_IMU/vel_roll.txt",ios::out);
+		force_data.open("./Control_IMU/AngularVel_roll.txt",ios::out);
 		for(int i = 0;i < DataTotal*0.1  ; i++){
-			force_data<<LogIMUvelx[i]<<endl; 
+			force_data<<LogIMUAngularVelx[i]<<endl; 
 		}	
 		force_data.close();
 		
-		force_data.open("./Control_IMU/vel_pitch.txt",ios::out);
+		force_data.open("./Control_IMU/AngularVel_pitch.txt",ios::out);
 		for(int i = 0;i < DataTotal*0.1  ; i++)
 		{
-			force_data<<LogIMUvely[i]<<endl;
+			force_data<<LogIMUAngularVely[i]<<endl;
+		}	
+		force_data.close();
+
+		force_data.open("./Control_IMU/AngularVel_yaw.txt",ios::out);
+		for(int i = 0;i < DataTotal*0.1  ; i++)
+		{
+			force_data<<LogIMUAngularVelz[i]<<endl;
 		}	
 		force_data.close();
 		
@@ -16128,24 +16135,24 @@ void gsavedata(){
 		push_data.close();
 
 
-		push_data.open("./A IMU/IMUvelx.txt",ios::out);
+		push_data.open("./A IMU/IMUAngularVelx.txt",ios::out);
 		for(int i = 0;i < IMU1.count  ; i++)
 		{
-			push_data<<IMU1.velx[i]<<endl; 
+			push_data<<IMU1.AngularVelx[i]<<endl; 
 		}	
 		push_data.close();
 
-		push_data.open("./A IMU/IMUvely.txt",ios::out);
+		push_data.open("./A IMU/IMUAngularVely.txt",ios::out);
 		for(int i = 0;i < IMU1.count  ; i++)
 		{
-			push_data<<IMU1.vely[i]<<endl; 
+			push_data<<IMU1.AngularVely[i]<<endl; 
 		}	
 		push_data.close();
 
-		push_data.open("./A IMU/IMUvelz.txt",ios::out);
+		push_data.open("./A IMU/IMUAngularVelz.txt",ios::out);
 		for(int i = 0;i < IMU1.count  ; i++)
 		{
-			push_data<<IMU1.velz[i]<<endl; 
+			push_data<<IMU1.AngularVelz[i]<<endl; 
 		}	
 		push_data.close();
 
@@ -16230,21 +16237,6 @@ void gsavedata(){
 		}	
 		push_data.close();
 
-	
-		push_data.open("./A push_recovery/state3lateral.txt",ios::out);
-		for(int i = 0;i < Estimatebuffersize  ; i++)
-		{
-			push_data<<COGestimate.state3lateral[i]<<endl; 
-		}	
-		push_data.close();
-
-		push_data.open("./A push_recovery/state3sagittal.txt",ios::out);
-		for(int i = 0;i < Estimatebuffersize  ; i++)
-		{
-			push_data<<COGestimate.state3saggital[i]<<endl; 
-		}	
-		push_data.close();
-
 
 		
 		// 前面補0避免無法匯入matlab//
@@ -16292,7 +16284,29 @@ void gsavedata(){
 			push_data<<filterZMP_lateral[i]<<endl;
 		}
 		push_data.close();
+		
 
+		push_data.open("./A push_recovery/COG/Cogstatesaggital.txt",ios::out);
+		for (int i = 0 ;i<6 ;i++){
+		push_data<<0<<endl;
+		}
+		for(int i = 6;i < Estimatebuffersize ; i++)
+		{
+			push_data<<COGestimate.Cogstatesaggital[i]<<endl;
+		}
+		push_data.close();
+
+
+		push_data.open("./A push_recovery/COG/Cogstatelateral.txt",ios::out);
+		for (int i = 0 ;i<6 ;i++){
+		push_data<<0<<endl;
+		}
+		for(int i = 6;i < Estimatebuffersize ; i++)
+		{
+			push_data<<COGestimate.Cogstatelateral[i]<<endl;
+		}
+		push_data.close();
+		
 
 		push_data.open("./A push_recovery/COG/Dcogstatesagittal.txt",ios::out);
 		for (int i = 0 ;i<6 ;i++){
@@ -16303,7 +16317,7 @@ void gsavedata(){
 			push_data<<COGestimate.Dcogstatesaggital[i]<<endl;
 		}
 		push_data.close();
-		
+
 
 		push_data.open("./A push_recovery/COG/Dcogstatelateral.txt",ios::out);
 		for (int i = 0 ;i<6 ;i++){
@@ -16314,41 +16328,91 @@ void gsavedata(){
 			push_data<<COGestimate.Dcogstatelateral[i]<<endl;
 		}
 		push_data.close();
-				
-		push_data.open("./A push_recovery/COG/AngleX.txt",ios::out);
+
+			
+		push_data.open("./A push_recovery/state3sagittal.txt",ios::out);
+		for(int i = 0;i < Estimatebuffersize  ; i++)
+		{
+			push_data<<COGestimate.state3saggital[i]<<endl; 
+		}	
+		push_data.close();
+
+
+		push_data.open("./A push_recovery/state3lateral.txt",ios::out);
+		for(int i = 0;i < Estimatebuffersize  ; i++)
+		{
+			push_data<<COGestimate.state3lateral[i]<<endl; 
+		}	
+		push_data.close();
+
+
+		push_data.open("./A push_recovery/COG/EKFAngleX.txt",ios::out);
 		for (int i = 0 ;i<6 ;i++){
 			push_data<<0<<endl;
 		}
-
 		for(int i = 6;i < Estimatebuffersize ; i++)
 		{
-			push_data<<COGestimate.AngleX[i]<<endl;
+			push_data<<COGestimate.EKFAngleX[i]<<endl;
 		}
 		push_data.close();
 
-		push_data.open("./A push_recovery/COG/AngleY.txt",ios::out);
+
+		push_data.open("./A push_recovery/COG/EKFAngleY.txt",ios::out);
 		for (int i = 0 ;i<6 ;i++){
 			push_data<<0<<endl;
 		}
-
 		for(int i = 6;i < Estimatebuffersize ; i++)
 		{
-			push_data<<COGestimate.AngleY[i]<<endl;
+			push_data<<COGestimate.EKFAngleY[i]<<endl;
 		}
 		push_data.close();
 
-		push_data.open("./A push_recovery/COG/AngleZ.txt",ios::out);
+
+		push_data.open("./A push_recovery/COG/EKFAngleZ.txt",ios::out);
 		for (int i = 0 ;i<6 ;i++){
 			push_data<<0<<endl;
 		}
-
 		for(int i = 6;i < Estimatebuffersize ; i++)
 		{
-			push_data<<COGestimate.AngleZ[i]<<endl;
+			push_data<<COGestimate.EKFAngleZ[i]<<endl;
 		}
 		push_data.close();
 	
 
+		push_data.open("./A push_recovery/COG/EKFAngularVelX.txt",ios::out);
+		for (int i = 0 ;i<6 ;i++){
+			push_data<<0<<endl;
+		}
+
+		for(int i = 6;i < Estimatebuffersize ; i++)
+		{
+			push_data<<COGestimate.EKFAngularVelX[i]<<endl;
+		}
+		push_data.close();
+
+
+		push_data.open("./A push_recovery/COG/EKFAngularVelY.txt",ios::out);
+		for (int i = 0 ;i<6 ;i++){
+			push_data<<0<<endl;
+		}
+
+		for(int i = 6;i < Estimatebuffersize ; i++)
+		{
+			push_data<<COGestimate.EKFAngularVelY[i]<<endl;
+		}
+		push_data.close();
+
+
+		push_data.open("./A push_recovery/COG/EKFAngularVelZ.txt",ios::out);
+		for (int i = 0 ;i<6 ;i++){
+			push_data<<0<<endl;
+		}
+
+		for(int i = 6;i < Estimatebuffersize ; i++)
+		{
+			push_data<<COGestimate.EKFAngularVelZ[i]<<endl;
+		}
+		push_data.close();
 
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -16874,7 +16938,7 @@ void dataprocess(int LogEncCount)
 	else
 	{
 		COGestimate.rcompute(LogIMUabsanglex[LogEncCount], LogIMUabsangley[LogEncCount], 0, 
-								LogIMUvelx[LogEncCount], LogIMUvely[LogEncCount], LogIMUvelz[LogEncCount],
+								LogIMUAngularVelx[LogEncCount], LogIMUAngularVely[LogEncCount], LogIMUAngularVelz[LogEncCount],
 								LogIMUaccelx[LogEncCount], LogIMUaccely[LogEncCount], LogIMUaccelz[LogEncCount], 
 								filter_LogIMUaccelx[LogEncCount], filter_LogIMUaccely[LogEncCount], filter_LogIMUaccelz[LogEncCount], LogEncCount);
 	}
@@ -16903,65 +16967,51 @@ void dataprocess(int LogEncCount)
 	filterZMP_lateral[LogEncCount] = ZMP_lateral[LogEncCount];
 
     }
-
-
-
-
-
-else if (gFlagSimulation == ADAMSSimu) 
-{
-	gKineAll.ForceSensorData(gFlagSimulation, gFlagGoPass, LogEncCount+1, gForceDataLLeg, gForceDataRLeg);	
-	gKineAll.IMUSensorData_hsuan(gFlagSimulation,LogEncCount,IMU1.accelx,IMU1.accely,IMU1.accelz,IMU1.velx ,IMU1.vely,IMU1.velz,LFX,IMU1.finalanglex_test , IMU1.waistthetadot ) ;
-	gIMUdata();
+	else if (gFlagSimulation == ADAMSSimu) 
+	{
+		gKineAll.ForceSensorData(gFlagSimulation, gFlagGoPass, LogEncCount+1, gForceDataLLeg, gForceDataRLeg);	
+		gKineAll.IMUSensorData_hsuan(gFlagSimulation,LogEncCount,IMU1.accelx,IMU1.accely,IMU1.accelz,IMU1.AngularVelx ,IMU1.AngularVely,IMU1.AngularVelz,LFX,IMU1.finalanglex_test , IMU1.waistthetadot ) ;
+		gIMUdata();
 		
-	//adams mode   
+		//adams mode   
 	
-	sensorfilter( IMU1.accelx+LogEncCount,  filter_LogIMUaccelx+LogEncCount);
-	sensorfilter( IMU1.accely+LogEncCount,  filter_LogIMUaccely+LogEncCount);
-	sensorfilter( LFX+ LogEncCount,  filterLFX+ LogEncCount);	
+		sensorfilter( IMU1.accelx+LogEncCount,  filter_LogIMUaccelx+LogEncCount);
+		sensorfilter( IMU1.accely+LogEncCount,  filter_LogIMUaccely+LogEncCount);
+		sensorfilter( LFX+ LogEncCount,  filterLFX+ LogEncCount);	
 	
-	//COGestimate.compute(gEnc_FKCOG[LogEncCount*3+1], gKineAll.FS_ZMP+2*LogEncCount+1, filter_LogIMUaccelx[LogEncCount], LogEncCount,1); 
-	COGestimate.compute(gEnc_FKCOG[LogEncCount*3]  , gKineAll.FS_ZMP+2*LogEncCount  , filter_LogIMUaccely[LogEncCount], LogEncCount,2);
-	sensorfilter_vector(COGestimate.Cogstatesaggital+LogEncCount,filterCOG_sagittal+LogEncCount,LogEncCount);
-	//sensorfilter_vector(COGestimate.zmpstatesaggital+LogEncCount,filterZMP_sagittal+LogEncCount,LogEncCount);
-	filterZMP_sagittal[LogEncCount]=gKineAll.FS_ZMP[2*LogEncCount] ;
+		//COGestimate.compute(gEnc_FKCOG[LogEncCount*3+1], gKineAll.FS_ZMP+2*LogEncCount+1, filter_LogIMUaccelx[LogEncCount], LogEncCount,1); 
+		COGestimate.compute(gEnc_FKCOG[LogEncCount*3]  , gKineAll.FS_ZMP+2*LogEncCount  , filter_LogIMUaccely[LogEncCount], LogEncCount,2);
+		sensorfilter_vector(COGestimate.Cogstatesaggital+LogEncCount,filterCOG_sagittal+LogEncCount,LogEncCount);
+		//sensorfilter_vector(COGestimate.zmpstatesaggital+LogEncCount,filterZMP_sagittal+LogEncCount,LogEncCount);
+		filterZMP_sagittal[LogEncCount]=gKineAll.FS_ZMP[2*LogEncCount] ;
 
-}
-	
-else
-{// offline Cpp mode
-
-	if (single_foot==1)
-	{
-	
-	if (gKineAll.selSupport[gKineAll.stepIndex]==1) //right support
-	{
-		LFX[LogEncCount]=gKineAll.ForceDataKFR[gForceDataCount*6]*1e-6;
-		//cout<<"right support"<<endl;
 	}
-	else if(gKineAll.selSupport[gKineAll.stepIndex]==0)
-	{
-		LFX[LogEncCount]=gKineAll.ForceDataKFL[gForceDataCount*6]*1e-6;
-		//cout<<"left support"<<endl;
-	}	
 	else
-	{
-		LFX[LogEncCount]=(gKineAll.ForceDataKFL[gForceDataCount*6]+gKineAll.ForceDataKFR[gForceDataCount*6])*1e-6;
-		//cout<<"double support"<<endl;
+	{// offline Cpp mode
+
+		if (single_foot==1)
+		{
+	
+			if (gKineAll.selSupport[gKineAll.stepIndex]==1) //right support
+			{
+				LFX[LogEncCount]=gKineAll.ForceDataKFR[gForceDataCount*6]*1e-6;
+				//cout<<"right support"<<endl;
+			}
+			else if(gKineAll.selSupport[gKineAll.stepIndex]==0)
+			{
+				LFX[LogEncCount]=gKineAll.ForceDataKFL[gForceDataCount*6]*1e-6;
+				//cout<<"left support"<<endl;
+			}	
+			else
+			{
+				LFX[LogEncCount]=(gKineAll.ForceDataKFL[gForceDataCount*6]+gKineAll.ForceDataKFR[gForceDataCount*6])*1e-6;
+				//cout<<"double support"<<endl;
+			}
+		}
+		COGestimate.compute(gEnc_FKCOG[LogEncCount*3]  , gKineAll.FS_ZMP+2*LogEncCount  , filter_LogIMUaccely[LogEncCount], LogEncCount,2);
+		sensorfilter_vector(COGestimate.Cogstatesaggital+LogEncCount,filterCOG_sagittal+LogEncCount,LogEncCount);
+		filterZMP_sagittal[LogEncCount]=gKineAll.FS_ZMP[2*LogEncCount] ;
 	}
-	
-	}
-	
-
-	COGestimate.compute(gEnc_FKCOG[LogEncCount*3]  , gKineAll.FS_ZMP+2*LogEncCount  , filter_LogIMUaccely[LogEncCount], LogEncCount,2);
-	sensorfilter_vector(COGestimate.Cogstatesaggital+LogEncCount,filterCOG_sagittal+LogEncCount,LogEncCount);
-	filterZMP_sagittal[LogEncCount]=gKineAll.FS_ZMP[2*LogEncCount] ;
-	
-
-
-}
-
-
 
 
 	//Lateral direction 
@@ -17021,9 +17071,9 @@ for(int i = 0 ; i<push_data;i++)
 	LogIMUangley[DataTotal]=0;
 	LogIMUanglez[DataTotal]=0;
 	
-	LogIMUvelx[DataTotal]=0;
-	LogIMUvely[DataTotal]=0;
-	LogIMUvelz[DataTotal]=0;
+	LogIMUAngularVelx[DataTotal]=0;
+	LogIMUAngularVely[DataTotal]=0;
+	LogIMUAngularVelz[DataTotal]=0;
 	
 	LogIMUaccelx[DataTotal]=0;
 	LogIMUaccely[DataTotal]=0;

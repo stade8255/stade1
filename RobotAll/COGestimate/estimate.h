@@ -31,9 +31,13 @@ public:
 	double  Dcogstatesaggital[Estimatebuffersize];
 	double  state3saggital[Estimatebuffersize];
 
-	double AngleX[Estimatebuffersize];
-	double AngleY[Estimatebuffersize];
-	double AngleZ[Estimatebuffersize];
+	double EKFAngleX[Estimatebuffersize];
+	double EKFAngleY[Estimatebuffersize];
+	double EKFAngleZ[Estimatebuffersize];
+
+	double EKFAngularVelX[Estimatebuffersize];
+	double EKFAngularVelY[Estimatebuffersize];
+	double EKFAngularVelZ[Estimatebuffersize];
 	
 	bool estimate_lock ;
 	bool initflag;

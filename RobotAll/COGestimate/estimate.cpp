@@ -19,9 +19,13 @@ estimate ::estimate()
 		Dcogstatesaggital[i]=0;
 		state3saggital[i]=0;
 
-		AngleX[i]=0;
-		AngleY[i]=0;
-		AngleZ[i]=0;
+		EKFAngleX[i]=0;
+		EKFAngleY[i]=0;
+		EKFAngleZ[i]=0;
+
+		EKFAngularVelX[i]=0;
+		EKFAngularVelY[i]=0;
+		EKFAngularVelZ[i]=0;
 
 		initflag = false;
 		rinitflag = false;
@@ -44,7 +48,7 @@ int estimate::rcompute ( float anglex ,float  angley , float anglez, float angul
 
 	double Rotation[3][3];		// Rotation matrix (Quaternion形式)
 	
-	double cogaccelationRoll = cogaccely, cogaccelationPitch = cogaccelx, cogaccelationYaw = -cogaccelz;  // 暫存用
+	//double cogaccelationRoll = cogaccely, cogaccelationPitch = cogaccelx, cogaccelationYaw = -cogaccelz;  // 暫存用
 
 	
 	Vector x(n);   // 開state vector 
@@ -71,12 +75,12 @@ int estimate::rcompute ( float anglex ,float  angley , float anglez, float angul
 		x(7) = angularratez;  
 
 		static const double _P0[] = { 0.1 ,0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-								  0.0 ,0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 
-								  0.0 ,0.0, 0.1, 0.0, 0.0, 0.0, 0.0,
-								  0.0 ,0.0, 0.0, 0.1, 0.0, 0.0, 0.0,
-								  0.0 ,0.0, 0.0, 0.0, 0.1, 0.0, 0.0,
-								  0.0 ,0.0, 0.0, 0.0, 0.0, 0.1, 0.0,
-								  0.0 ,0.0, 0.0, 0.0, 0.0, 0.0, 0.1
+							    	  0.0 ,0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 
+									  0.0 ,0.0, 0.1, 0.0, 0.0, 0.0, 0.0,
+								      0.0 ,0.0, 0.0, 0.1, 0.0, 0.0, 0.0,
+								      0.0 ,0.0, 0.0, 0.0, 0.1, 0.0, 0.0,
+								      0.0 ,0.0, 0.0, 0.0, 0.0, 0.1, 0.0,
+								      0.0 ,0.0, 0.0, 0.0, 0.0, 0.0, 0.1
 	                                   };       //initial error 
 
 		Matrix P0(n, n, _P0); //建立 initial error  matrix  
@@ -136,10 +140,13 @@ int estimate::rcompute ( float anglex ,float  angley , float anglez, float angul
 
 	ea = QuaternionTrans1.ToEulerAngle();
 		
-	AngleX[estimatecount] = -ea.fRoll;
-	AngleY[estimatecount] = -ea.fPitch;
-	AngleZ[estimatecount] = ea.fYaw;
+	EKFAngleX[estimatecount] = -ea.fRoll;
+	EKFAngleY[estimatecount] = -ea.fPitch;
+	EKFAngleZ[estimatecount] = ea.fYaw;
 
+	EKFAngularVelX[estimatecount] = -rstate(5);
+	EKFAngularVelY[estimatecount] = -rstate(6);
+	EKFAngularVelZ[estimatecount] = rstate(7);
 
 	return EXIT_SUCCESS;
 

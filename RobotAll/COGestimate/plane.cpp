@@ -262,8 +262,8 @@ void cPlaneEKF::makeProcess() //  doing model  描述state間的關係 依據matrix A
 	else
 	{
 		// x = {COG, COGvelocity, ZMP}
-		x_(1) = x(1) +  samplingtime*x(2);
-		x_(2) = ww*ww*samplingtime*x(1)+x(2)-ww*ww*samplingtime*x(3)+(samplingtime/mass)* x(4);
+		x_(1) = x(1) + samplingtime*x(2);
+		x_(2) = ww*ww*samplingtime*x(1) + x(2) - ww*ww*samplingtime*x(3) + (samplingtime/mass)*x(4);
 		x_(3) = x(3); 
 	}
 
@@ -380,7 +380,7 @@ void rPlaneEKF::makeBaseA()
 
 void rPlaneEKF::makeA()
 {
-	A(1,1) = cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
+	A(1,1) =   cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
 	//A(1,2) = 0.0;
 	//A(1,3) = 0.0;
 	//A(1,4) = 0.0;
@@ -389,7 +389,7 @@ void rPlaneEKF::makeA()
 	A(1,7) = - x(4)*1/2*samplingtime;
 
 	//A(2,1) = 0.0;
-	A(2,2) = cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
+	A(2,2) =   cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
 	//A(2,3) = 0.0;
 	//A(2,4) = 0.0;
 	A(2,5) =   x(1)*1/2*samplingtime;
@@ -398,7 +398,7 @@ void rPlaneEKF::makeA()
 	
 	//A(3,1) = 0.0;
 	//A(3,2) = 0.0;
-	A(3,3) = cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
+	A(3,3) =   cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
 	//A(3,4) = 0.0;
 	A(3,5) =   x(4)*1/2*samplingtime;
 	A(3,6) =   x(1)*1/2*samplingtime;
@@ -407,7 +407,7 @@ void rPlaneEKF::makeA()
 	//A(4,1) = 0.0;
 	//A(4,2) = 0.0;
 	//A(4,3) = 0.0;
-	A(4,4) = cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
+	A(4,4) =   cos( 1/2*samplingtime*sqrt( x(5)*x(5)+x(6)*x(6)+x(7)*x(7) ) );
 	A(4,5) = - x(3)*1/2*samplingtime;
 	A(4,6) =   x(2)*1/2*samplingtime;
 	A(4,7) =   x(1)*1/2*samplingtime;
